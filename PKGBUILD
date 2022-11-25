@@ -1,4 +1,4 @@
-# Maintainer: MabelisYT <mabeliscool1234@gmail.com>
+# Maintainer: MabelisYT
 
 pkgname=csvsp
 pkgver=1.0.0
