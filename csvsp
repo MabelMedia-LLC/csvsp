@@ -1,0 +1,129 @@
+#!/usr/bin/python3
+
+"""
+csvsp C# VisualStudio Solution Generator, v1.0.0.
+Copyright MabelMedia LLC.
+"""
+
+import os
+import sys
+import uuid
+
+def PrintUsage():
+    print("Usage: csvsp [Parent Folder] [Solution Name] [Project Name]")
+
+def Main():
+    if len(sys.argv) < 4:
+        PrintUsage()
+        exit(1)
+    SolutionName = sys.argv[2]
+    SolutionDir = f"{sys.argv[1]}/{SolutionName}/"
+    if os.path.exists(SolutionDir):
+        print("[Error]: Solution Directory Already Exists.")
+        PrintUsage()
+        exit(1)
+    os.mkdir(SolutionDir)
+    with open(f"{SolutionDir}Build", "w") as BuildScriptFile:
+        BuildScriptFile.writelines([
+            "#!/bin/sh\n",
+            "msbuild -p:Configuration=Release"
+        ])
+    SolutionUUID = uuid.uuid4()
+    ProjectName = sys.argv[3]
+    with open(f"{SolutionDir}Run", "w") as RunScriptFile:
+        RunScriptFile.writelines([
+            "#!/bin/sh\n",
+            f"mono {ProjectName}/bin/Release/{ProjectName}.exe"
+        ])
+    ProjectUUID = uuid.uuid4()
+    with open(f"{SolutionDir}{sys.argv[2]}.sln", "w") as SolutionFile:
+        SolutionFile.writelines([
+            "Microsoft Visual Studio Solution File, Format Version 12.00\n",
+            f"Project(\"{SolutionUUID}\") = \"{ProjectName}\", \"{ProjectName}\\{ProjectName}.csproj\", \"{ProjectUUID}\"\n",
+            "EndProject\n",
+            "Global\n",
+            "\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\n",
+            "\t\tDebug|x86 = Debug|x86\n",
+            "\t\tRelease|x86 = Release|x86\n",
+            "\tEndGlobalSection\n",
+            "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\n",
+            f"\t\t{ProjectUUID}.Debug|x86.ActiveCfg = Debug|x86\n",
+            f"\t\t{ProjectUUID}.Debug|x86.Build.0 = Debug|x86\n",
+            f"\t\t{ProjectUUID}.Release|x86.ActiveCfg = Release|x86\n",
+            f"\t\t{ProjectUUID}.Release|x86.Build.0 = Release|x86\n",
+            "\tEndGlobalSection\n",
+            "EndGlobal"
+        ])
+    ProjectDir = f"{SolutionDir}{ProjectName}/"
+    ProjectPropertiesDir = f"{ProjectDir}Properties/"
+    os.mkdir(ProjectDir)
+    os.mkdir(ProjectPropertiesDir)
+    with open(f"{ProjectPropertiesDir}AssemblyInfo.cs", "w") as ProjectPropertiesFile:
+        ProjectPropertiesFile.writelines([
+            "using System.Reflection;\n\n",
+            f"[assembly: AssemblyTitle(\"{ProjectName}\")]\n",
+            "[assembly: AssemblyDescription(\"\")]\n",
+            "[assembly: AssemblyConfiguration(\"\")]\n",
+            "[assembly: AssemblyCompany(\"\")]\n",
+            f"[assembly: AssemblyProduct(\"{ProjectName}\")]\n",
+            "[assembly: AssemblyCopyright(\"\")]\n",
+            "[assembly: AssemblyTrademark(\"\")]\n",
+            "[assembly: AssemblyCulture(\"\")]\n",
+            "[assembly: AssemblyVersion(\"0.0.0\")]"])
+    with open(f"{ProjectDir}MainClass.cs", "w") as TemplateSourceFile:
+        TemplateSourceFile.writelines([
+            "using System;\n\n",
+            f"namespace {ProjectName} {{\n",
+            "\tpublic static class MainClass {\n",
+            "\t\tpublic static void Main(string[] CLA) {\n",
+            "\t\t\tConsole.WriteLine(\"Hello, World!\");\n",
+            "\t\t}\n",
+            "\t}\n",
+            "}"])
+    with open(f"{ProjectDir}{ProjectName}.csproj", "w") as ProjectFile:
+        ProjectFile.writelines([
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n",
+            "<Project DefaultTargets=\"Build\" ToolsVersion=\"4.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n",
+            "\t<PropertyGroup>\n",
+            "\t\t<Configuration Condition=\" '$(Configuration)' == '' \">Debug</Configuration>\n",
+            "\t\t<Platform Condition=\" '$(Platform)' == '' \">x86</Platform>\n",
+            f"\t\t<ProjectGuid>{{{ProjectUUID}}}</ProjectGuid>\n",
+            "\t\t<OutputType>Exe</OutputType>\n",
+            f"\t\t<RootNamespace>{ProjectName}</RootNamespace>\n",
+            f"\t\t<AssemblyName>{ProjectName}</AssemblyName>\n",
+            "\t\t<TargetFrameworkVersion>v4.8</TargetFrameworkVersion>\n",
+            "\t\t<ReleaseVersion>0.0.0.0</ReleaseVersion>\n",
+            "\t</PropertyGroup>\n",
+            "\t<PropertyGroup Condition=\" '$(Configuration)|$(Platform)' == 'Debug|x86' \">\n",
+            "\t\t<DebugSymbols>true</DebugSymbols>\n",
+            "\t\t<DebugType>full</DebugType>\n",
+            "\t\t<Optimize>false</Optimize>\n",
+            "\t\t<OutputPath>bin\Debug</OutputPath>\n",
+            "\t\t<DefineConstants>DEBUG;</DefineConstants>\n",
+            "\t\t<ErrorReport>prompt</ErrorReport>\n",
+            "\t\t<WarningLevel>4</WarningLevel>\n",
+            "\t\t<ExternalConsole>true</ExternalConsole>\n",
+            "\t\t<PlatformTarget>x86</PlatformTarget>\n",
+            "\t\t<LangVersion>Latest</LangVersion>\n",
+            "\t</PropertyGroup>\n",
+            "\t<PropertyGroup Condition=\" '$(Configuration)|$(Platform)' == 'Release|x86' \">\n",
+            "\t\t<Optimize>true</Optimize>\n",
+            "\t\t<OutputPath>bin\Release</OutputPath>\n",
+            "\t\t<ErrorReport>prompt</ErrorReport>\n",
+            "\t\t<WarningLevel>4</WarningLevel>\n",
+            "\t\t<ExternalConsole>true</ExternalConsole>\n",
+            "\t\t<PlatformTarget>x64</PlatformTarget>\n",
+            "\t\t<LangVersion>Latest</LangVersion>\n",
+            "\t</PropertyGroup>\n",
+            "\t<ItemGroup>\n",
+            "\t\t<Reference Include=\"System\" />\n",
+            "\t</ItemGroup>\n",
+            "\t<ItemGroup>\n",
+            "\t\t<Compile Include=\"MainClass.cs\" />\n",
+            "\t\t<Compile Include=\"Properties\AssemblyInfo.cs\" />\n",
+            "\t</ItemGroup>\n",
+            "\t<Import Project=\"$(MSBuildBinPath)\Microsoft.CSharp.targets\" />\n",
+            "</Project>"])    
+
+if __name__=="__main__":
+    Main()
