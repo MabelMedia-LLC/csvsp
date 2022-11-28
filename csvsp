@@ -10,15 +10,12 @@ import sys
 import uuid
 
 def PrintUsage():
-    print("Usage: csvsp [Parent Folder] [Solution Name] [Project Name]")
-    print("Example: csvsp . TestSolution TestProject")
+    print("Usage: csvsp [command] [Parent Folder] [Solution Name] [Project Name]")
+    print("Example: csvsp create . TestSolution TestProject")
 
-def Main():
-    if len(sys.argv) < 4:
-        PrintUsage()
-        exit(1)
-    SolutionName = sys.argv[2]
-    SolutionDir = f"{sys.argv[1]}/{SolutionName}/"
+def CreateSolution():
+    SolutionName = sys.argv[3]
+    SolutionDir = f"{sys.argv[2]}/{SolutionName}/"
     if os.path.exists(SolutionDir):
         print("[Error]: Solution Directory Already Exists.")
         PrintUsage()
@@ -30,14 +27,14 @@ def Main():
             "msbuild -p:Configuration=Release"
         ])
     SolutionUUID = uuid.uuid4()
-    ProjectName = sys.argv[3]
+    ProjectName = sys.argv[4]
     with open(f"{SolutionDir}Run", "w") as RunScriptFile:
         RunScriptFile.writelines([
             "#!/bin/sh\n",
             f"mono {ProjectName}/bin/Release/{ProjectName}.exe"
         ])
     ProjectUUID = uuid.uuid4()
-    with open(f"{SolutionDir}{sys.argv[2]}.sln", "w") as SolutionFile:
+    with open(f"{SolutionDir}{SolutionName}.sln", "w") as SolutionFile:
         SolutionFile.writelines([
             "Microsoft Visual Studio Solution File, Format Version 12.00\n",
             f"Project(\"{SolutionUUID}\") = \"{ProjectName}\", \"{ProjectName}\\{ProjectName}.csproj\", \"{ProjectUUID}\"\n",
@@ -124,7 +121,16 @@ def Main():
             "\t\t<Compile Include=\"Properties\AssemblyInfo.cs\" />\n",
             "\t</ItemGroup>\n",
             "\t<Import Project=\"$(MSBuildBinPath)\Microsoft.CSharp.targets\" />\n",
-            "</Project>"])    
+            "</Project>"])
+
+def Main():
+    if len(sys.argv) < 5:
+        PrintUsage()
+        exit(1)
+    Command = sys.argv[1]
+    match Command.lower():
+        case "create":
+            CreateSolution()
 
 if __name__=="__main__":
     Main()
