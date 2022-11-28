@@ -6,12 +6,49 @@ Copyright MabelMedia LLC.
 """
 
 import os
+from pathlib import Path
+import stat
 import sys
 import uuid
+from xml.dom import minidom
 
 def PrintUsage():
-    print("Usage: csvsp [command] [Parent Folder] [Solution Name] [Project Name]")
-    print("Example: csvsp create . TestSolution TestProject")
+    print("Usage:\n")
+    print("csvsp create [Parent Folder] [Solution Name] [Project Name]")
+    print("csvsp add-dependency [Parent Folder] [Solution Name] [Project Name] [Dependency File Name]")
+
+def AddDependency():
+    SolutionName = sys.argv[3]
+    SolutionDir = f"{sys.argv[2]}/{SolutionName}/"
+    if not os.path.exists(SolutionDir):
+        print("[Error]: Solution Directory Doesn't Exist.")
+        PrintUsage()
+        exit(1)
+    ProjectName = sys.argv[4]
+    ProjectDir = f"{SolutionDir}{ProjectName}/"
+    if not os.path.exists(ProjectDir):
+        print("[Error]: Project Directory Doesn't Exist.")
+        PrintUsage()
+        exit(1)
+    DependencyFileName = sys.argv[5]
+    if not os.path.exists(DependencyFileName):
+        print("[Error]: Dependency File Doesn't Exist.")
+        PrintUsage()
+        exit(1)
+    ProjectTree = minidom.parse(f"{ProjectDir}{ProjectName}.csproj")
+    DependencyNode = ProjectTree.createElement("Reference")
+    DependencyNode.setAttribute("Include", Path(DependencyFileName).stem)
+    HintPathNode = ProjectTree.createElement("HintPath")
+    DependencyNode.appendChild(HintPathNode)
+    HintPathText = ProjectTree.createTextNode(DependencyFileName.replace("/", "\\"))
+    HintPathNode.appendChild(HintPathText)
+    ProjectTree.childNodes[0].childNodes[7].appendChild(DependencyNode)
+    ProjectTree.writexml(open(f"{ProjectDir}{ProjectName}.csproj", "w"))
+
+def MakeExecutable(FileName):
+    Mode = os.stat(FileName).st_mode
+    Mode |= (Mode & 0o444) >> 2
+    os.chmod(FileName, Mode)
 
 def CreateSolution():
     SolutionName = sys.argv[3]
@@ -26,6 +63,7 @@ def CreateSolution():
             "#!/bin/sh\n",
             "msbuild -p:Configuration=Release"
         ])
+    MakeExecutable(f"{SolutionDir}Build")
     SolutionUUID = uuid.uuid4()
     ProjectName = sys.argv[4]
     with open(f"{SolutionDir}Run", "w") as RunScriptFile:
@@ -33,6 +71,7 @@ def CreateSolution():
             "#!/bin/sh\n",
             f"mono {ProjectName}/bin/Release/{ProjectName}.exe"
         ])
+    MakeExecutable(f"{SolutionDir}Run")
     ProjectUUID = uuid.uuid4()
     with open(f"{SolutionDir}{SolutionName}.sln", "w") as SolutionFile:
         SolutionFile.writelines([
@@ -124,13 +163,21 @@ def CreateSolution():
             "</Project>"])
 
 def Main():
-    if len(sys.argv) < 5:
+    if len(sys.argv) < 2:
         PrintUsage()
         exit(1)
     Command = sys.argv[1]
     match Command.lower():
         case "create":
+            if len(sys.argv) < 5:
+                PrintUsage()
+                exit(1)
             CreateSolution()
+        case "add-dependency":
+            if len(sys.argv) < 6:
+                PrintUsage()
+                exit(1)
+            AddDependency()
 
 if __name__=="__main__":
     Main()
