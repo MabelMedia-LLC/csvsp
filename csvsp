@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-csvsp C# VisualStudio Solution Generator, v1.0.0.
+csvsp C# VisualStudio Solution Generator, v1.0.1.
 Copyright MabelMedia LLC.
 """
 
@@ -14,7 +14,7 @@ from xml.dom import minidom
 
 def PrintUsage():
     print("Usage:\n")
-    print("csvsp create [Parent Folder] [Solution Name] [Project Name]")
+    print("csvsp create [Parent Folder] [Solution Name] [Project Name] [Project Type]")
     print("csvsp add-dependency [Parent Folder] [Solution Name] [Project Name] [Dependency File Name]")
 
 def AddDependency():
@@ -51,6 +51,16 @@ def MakeExecutable(FileName):
     os.chmod(FileName, Mode)
 
 def CreateSolution():
+    ProjectType = "console"
+    if len(sys.argv) >= 6:
+        ProjectType = sys.argv[5]
+    match ProjectType.lower():
+        case "console":
+            ProjectType = "Exe"
+        case "graphical":
+            ProjectType = "WinExe"
+        case "library":
+            ProjectType = "Library"
     SolutionName = sys.argv[3]
     SolutionDir = f"{sys.argv[2]}/{SolutionName}/"
     if os.path.exists(SolutionDir):
@@ -125,7 +135,7 @@ def CreateSolution():
             "\t\t<Configuration Condition=\" '$(Configuration)' == '' \">Debug</Configuration>\n",
             "\t\t<Platform Condition=\" '$(Platform)' == '' \">x86</Platform>\n",
             f"\t\t<ProjectGuid>{{{ProjectUUID}}}</ProjectGuid>\n",
-            "\t\t<OutputType>Exe</OutputType>\n",
+            f"\t\t<OutputType>{ProjectType}</OutputType>\n",
             f"\t\t<RootNamespace>{ProjectName}</RootNamespace>\n",
             f"\t\t<AssemblyName>{ProjectName}</AssemblyName>\n",
             "\t\t<TargetFrameworkVersion>v4.8</TargetFrameworkVersion>\n",
