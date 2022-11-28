@@ -11,6 +11,7 @@ import uuid
 
 def PrintUsage():
     print("Usage: csvsp [Parent Folder] [Solution Name] [Project Name]")
+    print("Example: csvsp . TestSolution TestProject")
 
 def Main():
     if len(sys.argv) < 4:
