@@ -12,6 +12,11 @@ import sys
 import uuid
 from xml.dom import minidom
 
+def Error(Message: str):
+    print(f"[Error]: {Message}")
+    PrintUsage()
+    exit(1)
+
 def PrintUsage():
     print("Usage:\n")
     print("csvsp create [Parent Folder] [Solution Name] [Project Name] [Project Type]")
@@ -21,20 +26,14 @@ def AddDependency():
     SolutionName = sys.argv[3]
     SolutionDir = f"{sys.argv[2]}/{SolutionName}/"
     if not os.path.exists(SolutionDir):
-        print("[Error]: Solution Directory Doesn't Exist.")
-        PrintUsage()
-        exit(1)
+        Error("Solution Directory Doesn't Exist.")
     ProjectName = sys.argv[4]
     ProjectDir = f"{SolutionDir}{ProjectName}/"
     if not os.path.exists(ProjectDir):
-        print("[Error]: Project Directory Doesn't Exist.")
-        PrintUsage()
-        exit(1)
+        Error("Project Directory Doesn't Exist.")
     DependencyFileName = sys.argv[5]
     if not os.path.exists(DependencyFileName):
-        print("[Error]: Dependency File Doesn't Exist.")
-        PrintUsage()
-        exit(1)
+        Error("Dependency File Doesn't Exist.")
     ProjectTree = minidom.parse(f"{ProjectDir}{ProjectName}.csproj")
     DependencyNode = ProjectTree.createElement("Reference")
     DependencyNode.setAttribute("Include", Path(DependencyFileName).stem)
@@ -64,9 +63,7 @@ def CreateSolution():
     SolutionName = sys.argv[3]
     SolutionDir = f"{sys.argv[2]}/{SolutionName}/"
     if os.path.exists(SolutionDir):
-        print("[Error]: Solution Directory Already Exists.")
-        PrintUsage()
-        exit(1)
+        Error("Solution Directory Already Exists.")
     os.mkdir(SolutionDir)
     with open(f"{SolutionDir}Build", "w") as BuildScriptFile:
         BuildScriptFile.writelines([
@@ -174,20 +171,19 @@ def CreateSolution():
 
 def Main():
     if len(sys.argv) < 2:
-        PrintUsage()
-        exit(1)
+        Error("No Sub-Command Specified.")
     Command = sys.argv[1]
     match Command.lower():
         case "create":
             if len(sys.argv) < 5:
-                PrintUsage()
-                exit(1)
+                Error("Sub-Command \"create\" Missing Arguments.")
             CreateSolution()
         case "add-dependency":
             if len(sys.argv) < 6:
-                PrintUsage()
-                exit(1)
+                Error("Sub-Command \"add-dependancy\" Missing Arguments.")
             AddDependency()
+        case _:
+            Error(f"The Sub-Command: \"{Command.lower()}\" Is Not Valid.")
 
 if __name__=="__main__":
     Main()
