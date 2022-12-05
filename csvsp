@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-csvsp C# VisualStudio Solution Generator, v1.0.1.
+csvsp C# VisualStudio Solution Generator, v1.0.2.
 Copyright MabelMedia LLC.
 """
 
@@ -76,7 +76,7 @@ def CreateSolution():
     with open(f"{SolutionDir}Run", "w") as RunScriptFile:
         RunScriptFile.writelines([
             "#!/bin/sh\n",
-            f"mono {ProjectName}/bin/Release/{ProjectName}.exe"
+            f"mono {ProjectName}/bin/Release/{ProjectName}.exe $@"
         ])
     MakeExecutable(f"{SolutionDir}Run")
     ProjectUUID = uuid.uuid4()
