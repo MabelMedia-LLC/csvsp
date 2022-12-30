@@ -5,7 +5,7 @@ An Open Source Python Script, To Generate A VS Solution, C# Project, And Build S
 
 Q: Why Did You Make This?
 
-A: Because I Wanted To Make A C# Console App, But You Can't Install Monodevelop On Arch.
+A: Because I Wanted To Make A C# Console App, But You Can't Install Monodevelop On Arch Linux.
 
 ---
 
